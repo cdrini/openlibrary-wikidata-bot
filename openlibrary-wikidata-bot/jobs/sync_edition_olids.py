@@ -1,3 +1,8 @@
+"""
+Finds editions on Wikidata and Open Library with the same ISBNs and adds the
+OpenLibrary ID to Wikidata and the Wikidata ID to Open Library.
+"""
+
 from typing import TypeVar, List, Callable, Hashable
 
 import pywikibot
@@ -50,6 +55,10 @@ def remove_dupes(
 
 
 def sync_edition_olids():
+    """
+    Finds editions on Wikidata and Open Library with the same ISBNs and adds the
+    OpenLibrary ID to Wikidata and the Wikidata ID to Open Library.
+    """
     wd = pywikibot.Site("wikidata", "wikidata")
     wd_repo = wd.data_repository()
     wd_sparql = SparqlQuery()
