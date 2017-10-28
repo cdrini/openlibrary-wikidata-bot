@@ -1,4 +1,4 @@
-This bot operators on OpenLibrary and Wikidata, doing some sync/cleanup tasks between the two.
+This bot operators on Open Library and Wikidata, doing some sync/cleanup tasks between the two.
 
 ## Setup
 
@@ -7,4 +7,4 @@ This bot operators on OpenLibrary and Wikidata, doing some sync/cleanup tasks be
 - `virtualenv`
 
 1. Clone the repo.
-2. Run `setup.sh`. This will create a virtual environment, install requirements, and setup authentication for Wikidata and OpenLibrary.
+2. Run `setup.sh`. This will create a virtual environment, install requirements, and setup authentication for Wikidata and Open Library.

@@ -71,7 +71,7 @@ def sync_edition_olids():
             # log a warning
             print("Multiple books found for isbns %s" % ','.join(isbns))
 
-        # update openlibrary data
+        # update open library data
         for book in ol_books:
             if 'wikidata' in book.identifiers:
                 # log warning: This book already has a qid!
