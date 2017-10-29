@@ -2,9 +2,9 @@
 
 echo "Setting up virtualenv..."
 if [ -e venv ]; then
-	echo "virtualenv already exists; skipping"
+  echo "virtualenv already exists; skipping"
 else
-	virtualenv venv
+  virtualenv venv
 fi
 
 source ./venv/Scripts/activate || exit 1

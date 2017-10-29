@@ -1,6 +1,6 @@
 """
 Finds editions on Wikidata and Open Library with the same ISBNs and adds the
-OpenLibrary ID to Wikidata and the Wikidata ID to Open Library.
+Open Library ID to Wikidata and the Wikidata ID to Open Library.
 """
 
 from typing import TypeVar, List, Callable, Hashable
@@ -35,7 +35,7 @@ def make_str_claim(repo, prop: str, target: str) -> pywikibot.Claim:
 
 
 def normalize_isbn(isbn: str) -> str:
-    """Remove hyphens and makes lowercase."""
+    """Remove hyphens and make lowercase."""
     return ''.join(isbn.split('-')).lower()
 
 
@@ -57,7 +57,7 @@ def remove_dupes(
 def sync_edition_olids():
     """
     Finds editions on Wikidata and Open Library with the same ISBNs and adds the
-    OpenLibrary ID to Wikidata and the Wikidata ID to Open Library.
+    Open Library ID to Wikidata and the Wikidata ID to Open Library.
     """
     wd = pywikibot.Site("wikidata", "wikidata")
     wd_repo = wd.data_repository()
