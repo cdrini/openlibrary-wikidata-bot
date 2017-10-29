@@ -3,6 +3,7 @@ Finds editions on Wikidata and Open Library with the same ISBNs and adds the
 Open Library ID to Wikidata and the Wikidata ID to Open Library.
 """
 
+import logging
 from typing import TypeVar, List, Callable, Hashable
 
 import pywikibot
@@ -66,30 +67,35 @@ def sync_edition_olids():
     ol = OpenLibrary()
 
     wikidata_books = wd_sparql.select(QUERY)
+    logging.info("Found %d books to update on Wikidata", len(wikidata_books))
     for row in wikidata_books:
         qid = row['item'].split('/')[-1]
-        isbns = [normalize_isbn(row[key]) for key in ['isbn10', 'isbn13'] if row[key]]
-        ol_books = [ol.Edition.get(isbn=isbn) for isbn in isbns]
+        isbns = [row[key] for key in ['isbn10', 'isbn13'] if row[key]]
+        ol_books = [ol.Edition.get(isbn=normalize_isbn(isbn)) for isbn in isbns]
+        ol_books = [book for book in ol_books if book]
         ol_books = remove_dupes(ol_books, lambda ed: ed.olid)
 
         if len(ol_books) == 0:
-            # log a warning
-            print("No books found for isbns %s" % ','.join(isbns))
+            logging.warning("No Open Library books for %s (isbns %s)", qid, ', '.join(isbns))
             continue
         if len(ol_books) > 1:
-            # log a warning
-            print("Multiple books found for isbns %s" % ','.join(isbns))
+            logging.warning("Multiple (%d) Open Library books for %s (isbns %s)", len(ol_books), qid, ', '.join(isbns))
 
         # update open library data
         for book in ol_books:
-            if 'wikidata' in book.identifiers:
-                # log warning: This book already has a qid!
-                print("%s already has a qid!" % book.olid)
-            book.identifiers['wikidata'] = book.identifiers.get('wikidata', []) + [qid]
-            if len(book.identifiers['wikidata']) > 1:
-                # log warning
-                print("%s has multiple qids!" % book.olid)
-            book.save("add wikidata identifier")
+            if 'wikidata' not in book.identifiers:
+                book.identifiers['wikidata'] = []
+
+            book_qids = book.identifiers['wikidata']
+
+            if qid in book_qids:
+                logging.warning("%s already has qid %s", book.olid, qid)
+                continue
+
+            book_qids.append(qid)
+            if len(book_qids) > 1:
+                logging.warning("%s now has multiple (%d) qids (%s)", book.olid, len(book_qids), ', '.join(book_qids))
+            book.save("[sync_edition_olids] add wikidata identifier")
 
         # update wikidata data
         for book in ol_books:
@@ -102,5 +108,5 @@ if __name__ == "__main__":
     try:
         sync_edition_olids()
     except Exception as e:
-        # log the error, probably
+        logging.exception("")
         raise e
