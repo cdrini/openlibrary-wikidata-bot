@@ -1,4 +1,4 @@
-This bot operators on Open Library and Wikidata, doing some sync/cleanup tasks between the two.
+This bot operates on Open Library and Wikidata, doing some sync/cleanup tasks between the two.
 
 ## Setup
 
