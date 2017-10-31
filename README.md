@@ -3,8 +3,10 @@ This bot operates on Open Library and Wikidata, doing some sync/cleanup tasks be
 ## Setup
 
 ### Dependencies
-- `python3+` (Only testing with 3.6)
+- `bash` (for setup)
+- `python3+` (Only tested with 3.6)
 - `virtualenv`
 
+### Instructions
 1. Clone the repo.
-2. Run `setup.sh`. This will create a virtual environment, install requirements, and setup authentication for Wikidata and Open Library.
+2. Run `setup.sh`. This will create a virtual environment in `./venv`,  install requirements, and setup authentication for Wikidata and Open Library.
