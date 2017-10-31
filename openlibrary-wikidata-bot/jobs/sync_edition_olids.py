@@ -1,5 +1,5 @@
 """
-Finds editions on Wikidata and Open Library with the same ISBNs and adds the
+Find editions on Wikidata and Open Library with the same ISBNs and add the
 Open Library ID to Wikidata and the Wikidata ID to Open Library.
 """
 
@@ -49,7 +49,7 @@ def remove_dupes(
         lst: List[TypeVar('T')],
         hash_fn: Callable[[TypeVar('T')], Hashable] = None
 ) -> List[TypeVar('T')]:
-    """Remove duplicates from a list."""
+    """Return a new list without duplicates."""
     result = []
     seen = set()
     for el in lst:
@@ -131,7 +131,7 @@ def sync_edition_olids(dry_run=False):
             if len(book_qids) > 1:
                 logger.warning("%s now has multiple (%d) qids (%s)", book.olid, len(book_qids), ', '.join(book_qids))
             if not dry_run:
-                ol.save("[sync_edition_olids] add wikidata identifier")
+                book.save("[sync_edition_olids] add wikidata identifier")
             logger.debug("Added %s to %s", qid, book.olid)
             ol_books_modified += 1
 
