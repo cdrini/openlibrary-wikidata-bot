@@ -71,19 +71,19 @@ console_handler.setLevel(logging.WARN)
 console_handler.setFormatter(log_formatter)
 logger.addHandler(console_handler)
 # Log INFO+ to the log file
-log_dir = 'logs/jobs/sync_edition_olids'
+log_dir = 'logs/jobs/sync_edition_olids_by_isbns'
 makedirs(log_dir, exist_ok=True)
 log_file_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-log_file = log_dir + '/sync_edition_olids_%s.log' % log_file_datetime
+log_file = log_dir + '/sync_edition_olids_by_isbns_%s.log' % log_file_datetime
 file_handler = logging.FileHandler(log_file)
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(log_formatter)
 logger.addHandler(file_handler)
 
 
-def sync_edition_olids(dry_run=False):
+def sync_edition_olids_by_isbns(dry_run=False):
     """
-    Finds editions on Wikidata and Open Library with the same ISBNs and adds the
+    Find editions on Wikidata and Open Library with the same ISBNs and add the
     Open Library ID to Wikidata and the Wikidata ID to Open Library.
     """
     wd = pywikibot.Site("wikidata", "wikidata")
@@ -149,7 +149,7 @@ def sync_edition_olids(dry_run=False):
 if __name__ == "__main__":
     console_handler.setLevel(logging.INFO)
     try:
-        sync_edition_olids(dry_run=True)
+        sync_edition_olids_by_isbns(dry_run=True)
     except Exception as e:
         logger.exception("")
         raise e
