@@ -2,7 +2,7 @@
 Find editions on Wikidata and Open Library with the same ISBNs and add the
 Open Library ID to Wikidata and the Wikidata ID to Open Library.
 """
-
+import argparse
 import datetime
 import logging
 from os import makedirs
@@ -81,7 +81,7 @@ file_handler.setFormatter(log_formatter)
 logger.addHandler(file_handler)
 
 
-def sync_edition_olids_by_isbns(dry_run=False):
+def sync_edition_olids_by_isbns(dry_run=False, limit=None):
     """
     Find editions on Wikidata and Open Library with the same ISBNs and add the
     Open Library ID to Wikidata and the Wikidata ID to Open Library.
@@ -92,7 +92,9 @@ def sync_edition_olids_by_isbns(dry_run=False):
 
     ol = OpenLibrary()
 
-    wd_books = wdqs.select(QUERY)
+    # append date to query avoid getting cached results
+    query = QUERY + f"\n # {datetime.datetime.now()}"
+    wd_books = wdqs.select(query)
     logger.info("Found %d editions to update", len(wd_books))
     ol_books_modified = 0
     wd_items_modified = 0
@@ -140,16 +142,36 @@ def sync_edition_olids_by_isbns(dry_run=False):
             item = pywikibot.ItemPage(wd_repo, qid)
             claim = make_str_claim(wd_repo, 'P648', book.olid)
             if not dry_run:
-                item.addClaim(claim)
+                item.addClaim(claim, bot=True)
             logger.debug("Added %s to %s", book.olid, qid)
             wd_items_modified += 1
+
+        if limit:
+            ol_books_limit = ol_books_modified >= limit
+            wd_items_limit = wd_items_modified >= limit
+            if ol_books_limit and wd_items_limit :
+                logger.info("Hit limit of %s on both Open Library and Wikidata; Stopping.", limit)
+            elif ol_books_limit:
+                logger.info("Hit limit of %s on Open Library; Stopping.", limit)
+            elif wd_items_limit:
+                logger.info("Hit limit of %s on Wikidata; Stopping.", limit)
+            if ol_books_limit or wd_items_limit:
+                break
     logger.info("Updated %d Open Library books and %d Wikidata items", ol_books_modified, wd_items_modified)
 
 
 if __name__ == "__main__":
     console_handler.setLevel(logging.INFO)
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--limit', type=int, default=None,
+                        help='Limit the number of edits performed on Wikidata/Open Library')
+    parser.add_argument('--dry-run', action='store_true',
+                        help="Don't actually perform edits on either Wikidata or Open Library")
+    args = parser.parse_args()
+
     try:
-        sync_edition_olids_by_isbns(dry_run=True)
+        sync_edition_olids_by_isbns(dry_run=args.dry_run, limit=args.limit)
     except Exception as e:
         logger.exception("")
         raise e
