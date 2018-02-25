@@ -111,7 +111,7 @@ def sync_edition_olids_by_isbns(dry_run=False, limit=None):
                 logger.warning("%s has multiple %s (%d)", qid, isbnDDs, len(_isbns))
             isbns += _isbns
         ol_books = [ol.Edition.get(isbn=normalize_isbn(isbn)) for isbn in isbns]
-        ol_books = [book for book in ol_books if book]
+        ol_books = [book for book in ol_books if book and book.olid != 'None']
         ol_books = remove_dupes(ol_books, lambda ed: ed.olid)
 
         logger.info("Found %d Open Library book(s) for %s (isbns %s)", len(ol_books), qid, ', '.join(isbns))

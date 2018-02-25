@@ -1,2 +1,2 @@
--e git+git://github.com/internetarchive/openlibrary-client.git@efc1e41b3434ea65748751913b0c38b12f08700e#egg=openlibrary-client
+-e git+git://github.com/internetarchive/openlibrary-client.git@2fd63727ef13f5443fc489ca9d71d3b224485c27#egg=openlibrary-client
 -e git+git://github.com/wikimedia/pywikibot-core.git@3.0.20170801#egg=pywikibot
