@@ -1,11 +1,5 @@
-venv
-
 # Editors
 .idea
 
-# pywikibot files
-apicache
 logs
-pywikibot.lwp
-throttle.ctrl
-user-config.py
+
