@@ -20,10 +20,9 @@ SELECT
 (group_concat(distinct ?isbn10; separator=";") as ?isbn10s)
 WHERE {
   ?item  wdt:P31 wd:Q3331189.                # instanceOf: Edition                 
-  OPTIONAL { ?item wdt:P212 ?isbn13. }       # isbn13: ?isbn13
-  OPTIONAL { ?item wdt:P957 ?isbn10. }       # isbn10: ?isbn10
-  FILTER(bound(?isbn13) || bound(?isbn10))
-  FILTER NOT EXISTS { ?item wdt:P648 ?olid } # Open Library ID: ?olid
+  { ?item wdt:P212 ?isbn13. }                # isbn13: ?isbn13
+  UNION { ?item wdt:P957 ?isbn10. }          # isbn10: ?isbn10
+  MINUS { ?item wdt:P648 ?olid }             # -Open Library ID: ?olid
   # SERVICE wikibase:label { bd:serviceParam wikibase:language "en" . }
 }
 GROUP BY ?item
