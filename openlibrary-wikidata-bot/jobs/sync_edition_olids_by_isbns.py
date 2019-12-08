@@ -13,21 +13,13 @@ import pywikibot
 from pywikibot.data.sparql import SparqlQuery
 
 QUERY = """
-SELECT
-?item
-# ?itemLabel
-(group_concat(distinct ?isbn13; separator=";") as ?isbn13s)
-(group_concat(distinct ?isbn10; separator=";") as ?isbn10s)
+SELECT ?item ?isbn
 WHERE {
-  ?item  wdt:P31 wd:Q3331189.                # instanceOf: Edition                 
-  { ?item wdt:P212 ?isbn13. }                # isbn13: ?isbn13
-  UNION { ?item wdt:P957 ?isbn10. }          # isbn10: ?isbn10
-  MINUS { ?item wdt:P648 ?olid }             # -Open Library ID: ?olid
+  ?item  wdt:P31 wd:Q3331189;     # instanceOf: Edition                 
+         wdt:P212|wdt:P957 ?isbn. # isbn13|isbn10: ?isbn13
+  MINUS { ?item wdt:P648 ?olid }  # Open Library ID: ?olid
   # SERVICE wikibase:label { bd:serviceParam wikibase:language "en" . }
 }
-GROUP BY ?item
-  # ?itemLabel
-# HAVING(count(?isbn13) > 1) # for testing
 # LIMIT 10 # for testing
 """
 
@@ -93,23 +85,28 @@ def sync_edition_olids_by_isbns(dry_run=False, limit=None):
 
     # append date to query avoid getting cached results
     query = QUERY + f"\n # {datetime.datetime.now()}"
-    wd_books = wdqs.select(query)
-    logger.info("Found %d editions to update", len(wd_books))
+    sparql_results = wdqs.select(query)
+
+    # Group by key (sparql hits timeouts when we do the grouping there)
+    qid_to_isbns = dict()
+    for row in sparql_results:
+        qid = row['item'].split('/')[-1]
+        if qid not in qid_to_isbns:
+            qid_to_isbns[qid] = []
+        qid_to_isbns[qid].append(normalize_isbn(row['isbn']))
+
+    logger.info("Found %d editions to update", len(qid_to_isbns))
     ol_books_modified = 0
     wd_items_modified = 0
-    for row in wd_books:
-        qid = row['item'].split('/')[-1]
+    for qid, isbns in qid_to_isbns.items():
         logger.debug("Processing %s", qid)
 
-        isbns = []
-        for isbnDDs in ['isbn13s', 'isbn10s']:
-            if not row[isbnDDs]:
-                continue
-            _isbns = row[isbnDDs].split(';')
-            if len(_isbns) > 1:
-                logger.warning("%s has multiple %s (%d)", qid, isbnDDs, len(_isbns))
-            isbns += _isbns
-        ol_books = [ol.Edition.get(isbn=normalize_isbn(isbn)) for isbn in isbns]
+        for isbn_len in [10, 13]:
+            count = len([isbn for isbn in isbns if len(isbn) == isbn_len])
+            if count > 1:
+                logger.warning("%s has multiple isbn%ss (%d)", qid, isbn_len, count)
+
+        ol_books = [ol.Edition.get(isbn=isbn) for isbn in isbns]
         ol_books = [book for book in ol_books if book and book.olid != 'None']
         ol_books = remove_dupes(ol_books, lambda ed: ed.olid)
 
