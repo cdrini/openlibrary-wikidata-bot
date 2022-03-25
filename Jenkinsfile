@@ -10,7 +10,7 @@ pipeline {
       steps {
         withCredentials([usernamePassword(credentialsId: 'openlibrary-bot-credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
           sh "mkdir $PYWIKIBOT_DIR"
-          sh "python3 -m generate_user_files -family:wikidata -lang:wikidata -user:$USERNAME -dir:$PYWIKIBOT_DIR"
+          sh "python3 /app/src/pywikibot/pwb.py generate_user_files -family:wikidata -lang:wikidata -user:$USERNAME -dir:$PYWIKIBOT_DIR"
           sh 'expect login-pywikibot.tcl'
         }
         withCredentials([usernamePassword(credentialsId: 'wikidata-bot-credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
