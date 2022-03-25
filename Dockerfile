@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 COPY requirements.txt ./
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt && \
+    # Getting weird SSL verification errors otherwise :/
+    pip3 install --upgrade certifi
 
 COPY . .
