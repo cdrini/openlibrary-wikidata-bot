@@ -13,12 +13,13 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-COPY requirements.txt ./
-RUN pip3 install --no-cache-dir -r requirements.txt && \
-    pip3 install --upgrade \
+RUN pip3 install --upgrade \
         # Getting weird SSL verification errors otherwise :/
         certifi \
         # Need new setuptools for latest pywikibot
         setuptools
+
+COPY requirements.txt ./
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY . .
