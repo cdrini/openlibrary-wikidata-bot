@@ -3,4 +3,4 @@
 # pywikibot deps
 wikitextparser>=0.47.5
 #pywikibot wants requests>=2.20.1, but our version of OL wants
-requests==2.11.1
+requests==2.20.0
