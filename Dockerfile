@@ -15,7 +15,10 @@ WORKDIR /app
 
 COPY requirements.txt ./
 RUN pip3 install --no-cache-dir -r requirements.txt && \
-    # Getting weird SSL verification errors otherwise :/
-    pip3 install --upgrade certifi
+    pip3 install --upgrade \
+        # Getting weird SSL verification errors otherwise :/
+        certifi \
+        # Need new setuptools for latest pywikibot
+        setuptools
 
 COPY . .
