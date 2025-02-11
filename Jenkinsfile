@@ -21,12 +21,14 @@ pipeline {
     stage('Run Job') {
       steps {
         sh 'python3 openlibrary-wikidata-bot/jobs/sync_edition_olids_by_isbns.py'
+        sh 'python3 openlibrary-wikidata-bot/jobs/sync_author_identifiers_from_wikidata.py --sql-path="tbd"'
       }
     }
   }
   post {
     always {
       archiveArtifacts artifacts: 'logs/jobs/sync_edition_olids_by_isbns/*', allowEmptyArchive: true
+      archiveArtifacts artifacts: 'logs/jobs/sync_author_identifiers_from_wikidata.py/*', allowEmptyArchive: true
       deleteDir() // Delete the workspace
     }
   }
