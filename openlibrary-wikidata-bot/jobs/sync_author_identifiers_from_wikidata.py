@@ -190,14 +190,14 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
                         write_error(wd_id, ol_id, f"multiple_wikidata_remote_ids_for_one_author", remote_ids_key, ",".join([f'"{val}"' for val in valid_wd_remote_id_values]))
 
                 if len(remote_ids.keys()) > 0:
-                    # TODO: Merge remote IDs with the author's existing remote IDs
-                    # 
-                    # for author in authors:
-                    #   author.remote_ids, matches = merge_remote_ids(remote_ids)
-                    #   if matches > 0:
-                    #     if not dry_run:
-                    #        author.save("[sync_author_identifiers_from_wikidata] add wikidata rekote identifiers")
-                    #     else:
+            # TODO: Merge remote IDs with the author's existing remote IDs
+            # 
+            # 
+            # author.remote_ids, matches = merge_remote_ids(remote_ids)
+            # if matches > 0:
+            #     if not dry_run:
+            #        author.save("[sync_author_identifiers_with_wikidata] add wikidata remote identifiers")
+            #     else:
                     logger.info(f'new remote_ids for [{", ".join(ol_ids)}]: {remote_ids}')
 
             except json.JSONDecodeError as e:
