@@ -1,5 +1,5 @@
 from datetime import datetime
-# from olclient import OpenLibrary
+from olclient import OpenLibrary
 from os import makedirs
 import argparse
 import csv
@@ -36,7 +36,7 @@ n = datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
 csv_file_path = f"{problem_dir}/sync_author_wikidata_ids_merge_problems-{n}.csv"
 with open(csv_file_path, mode="w", newline="", encoding="utf-8") as file:
     writer = csv.writer(file)
-    writer.writerow(["wdid", "olid", "problem", "identifier", "details"])  # Write header
+    writer.writerow(["wdid", "olid", "author_name", "problem", "identifier", "details"])  # Write header
 
 # I'd like it if this could come from identifiers.yml, but that's in a totally different repo!
 # In an ideal world, identifiers.yml stores the WD P### identifier for each remote ID type, and we can loop thru that instead.
@@ -72,48 +72,43 @@ def validate_wikidata_key(obj: dict[str, any], key=str) -> bool:
     return True
 
 
-def write_error(wd_id, author_key, error_type, id, details):
-    logger.error(f'{error_type} for {author_key}, wd {wd_id}: {id}: {details}')
+def write_error(wd_id, author_key, author_name, error_type, id, details):
+    logger.error(f'{error_type} for {author_key} ({author_name}), wd {wd_id}: {id}: {details}')
     with open(csv_file_path, mode="a", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
-        writer.writerow([wd_id, author_key, error_type, id, details])
+        writer.writerow([wd_id, author_key, author_name, error_type, id, details])
 
 
 def merge_remote_ids(
-    author, incoming_ids
+    author, incoming_ids, wd_id
 ) -> tuple[dict[str, str], int]:
     """Returns the author's remote IDs merged with a given remote IDs object, as well as a count for how many IDs had conflicts.
     If incoming_ids is empty, or if there are more conflicts than matches, no merge will be attempted, and the output will be (author.remote_ids, -1).
     """
+    if not hasattr(author, "remote_ids"):
+        write_error(wd_id, author.olid, author.name, f"openlibrary_author_remote_ids_failed_to_fetch", "", "")
+        return {}, -1
     output = {**author.remote_ids}
-    if len(incoming_ids.items()) == 0:
-        return output, -1
     # Count
-    matches = 0
+    update_count = 0
     conflicts = 0
     for identifier in WD_IDENTIFIERS.values():
         if identifier in output and identifier in incoming_ids:
             if output[identifier] != incoming_ids[identifier]:
                 conflicts = conflicts + 1
-                write_error(author.key, f"openlibrary_wikidata_remote_id_collision", identifier, f'{{"ol": "{output[identifier]}", "wd": "{incoming_ids[identifier]}"}}')
+                write_error(wd_id, author.olid, author.name, f"openlibrary_wikidata_remote_id_collision", identifier, f'{{"ol": "{output[identifier]}", "wd": "{incoming_ids[identifier]}"}}')
             else:
                 output[identifier] = incoming_ids[identifier]
-                matches = matches + 1
+        elif identifier in incoming_ids and identifier not in output:
+            output[identifier] = incoming_ids[identifier]
+            update_count = update_count + 1
     if conflicts > 0:
         return author.remote_ids, -1
-    return output, matches
+    return output, update_count
 
 
 def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
-    # ol = OpenLibrary()
-    # Can't get this to run, requirements.txt fails
-    #ERROR: Cannot install -r requirements.txt (line 1), -r requirements.txt (line 2), openlibrary-client and requests==2.11.1 because these package versions have conflicting dependencies.
-    #
-    #The conflict is caused by:
-    #    The user requested requests==2.11.1
-    #    openlibrary-client 0.0.17 depends on requests==2.11.1
-    #    internetarchive 1.7.3 depends on requests<3.0.0 and >=2.9.1
-    #    pywikibot 7.0.0 depends on requests>=2.20.1; python_version >= "3.6"
+    ol = OpenLibrary()
 
     csv.field_size_limit(sys.maxsize)
 
@@ -150,12 +145,12 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
 
                 if len(ol_ids) > 1:
                     for ol_id in ol_ids:
-                        write_error(wd_id, ol_id, f"multiple_openlibrary_authors_for_one_wikidata_row", "ol_id", f'[{",".join([f'"{val}"' for val in ol_ids])}]')
+                        author = ol.Author.get(ol_id)
+                        write_error(wd_id, ol_id, author.name, f"multiple_openlibrary_authors_for_one_wikidata_row", "ol_id", f'[{",".join([f'"{val}"' for val in ol_ids])}]')
                     continue
                 ol_id = ol_ids[0]
 
-                # TODO: get authors from OL client when i can get requirements.txt to work
-                # author = ol.Author.get(key=ol_id)
+                author = ol.Author.get(ol_id)
 
                 remote_ids = {}
 
@@ -181,24 +176,21 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
                     # Simple case: there's only one match. Add it to the remote_ids dict
                     if len(valid_wd_remote_id_values) == 1:
                         remote_id_value = valid_wd_remote_id_values[0]
-                        # print(f"    {remote_ids_key}: {remote_id_value}")
                         remote_ids[remote_ids_key] = remote_id_value
                     
                     # Bad case: there are multiple values for the remote ID
                     elif len(wd_remote_id_values) > 1:
-                        # print(f"\033[91m    {remote_ids_key}: {", ".join([obj['value']['content'] for obj in wd_remote_id_values])}\033[0m")
-                        write_error(wd_id, ol_id, f"multiple_wikidata_remote_ids_for_one_author", remote_ids_key, ",".join([f'"{val}"' for val in valid_wd_remote_id_values]))
+                        write_error(wd_id, ol_id, author.name, f"multiple_wikidata_remote_ids_for_one_author", remote_ids_key, ",".join([f'"{val}"' for val in valid_wd_remote_id_values]))
 
                 if len(remote_ids.keys()) > 0:
-            # TODO: Merge remote IDs with the author's existing remote IDs
-            # 
-            # 
-            # author.remote_ids, matches = merge_remote_ids(remote_ids)
-            # if matches > 0:
-            #     if not dry_run:
-            #        author.save("[sync_author_identifiers_with_wikidata] add wikidata remote identifiers")
-            #     else:
-                    logger.info(f'new remote_ids for {ol_id}: {remote_ids}')
+                    remote_ids, update_count = merge_remote_ids(author, remote_ids, wd_id)
+                    if update_count > 0:
+                        if not dry_run:
+                            pass
+                            # I am not trying this yet! I'm terrified! I made dry-run default to false for this reason 😬
+                            # author.remote_ids = remote_ids
+                            # author.save("[sync_author_identifiers_with_wikidata] add wikidata remote identifiers")
+                        logger.info(f'new remote_ids for {ol_id}: {remote_ids}')
 
             except json.JSONDecodeError as e:
                 logger.error(f"Error parsing wikidata JSON on row {row} - {e}")
