@@ -99,7 +99,7 @@ def merge_remote_ids(
             else:
                 output[identifier] = incoming_ids[identifier]
                 matches = matches + 1
-    if conflicts > matches:
+    if conflicts > 0:
         return author.remote_ids, -1
     return output, matches
 
