@@ -198,7 +198,7 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
             #     if not dry_run:
             #        author.save("[sync_author_identifiers_with_wikidata] add wikidata remote identifiers")
             #     else:
-                    logger.info(f'new remote_ids for [{", ".join(ol_ids)}]: {remote_ids}')
+                    logger.info(f'new remote_ids for {ol_id}: {remote_ids}')
 
             except json.JSONDecodeError as e:
                 logger.error(f"Error parsing wikidata JSON on row {row} - {e}")
