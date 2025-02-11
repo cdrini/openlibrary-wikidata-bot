@@ -33,7 +33,7 @@ logger.addHandler(file_handler)
 
 # Setup error sheet
 n = datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
-csv_file_path = f"{problem_dir}/sync_author_wikidata_ids_merge_problems-{n}.csv"
+csv_file_path = f'{problem_dir}/sync_author_wikidata_ids_merge_problems-{n}.csv'
 with open(csv_file_path, mode="w", newline="", encoding="utf-8") as file:
     writer = csv.writer(file)
     writer.writerow(["wdid", "olid", "author_name", "problem", "identifier", "details"])  # Write header
@@ -86,7 +86,7 @@ def merge_remote_ids(
     If incoming_ids is empty, or if there are more conflicts than matches, no merge will be attempted, and the output will be (author.remote_ids, -1).
     """
     if not hasattr(author, "remote_ids"):
-        write_error(wd_id, author.olid, author.name, f"openlibrary_author_remote_ids_failed_to_fetch", "", "")
+        write_error(wd_id, author.olid, author.name, "openlibrary_author_remote_ids_failed_to_fetch", "", "")
         return {}, -1
     output = {**author.remote_ids}
     # Count
@@ -96,9 +96,7 @@ def merge_remote_ids(
         if identifier in output and identifier in incoming_ids:
             if output[identifier] != incoming_ids[identifier]:
                 conflicts = conflicts + 1
-                write_error(wd_id, author.olid, author.name, f"openlibrary_wikidata_remote_id_collision", identifier, f'{{"ol": "{output[identifier]}", "wd": "{incoming_ids[identifier]}"}}')
-            else:
-                output[identifier] = incoming_ids[identifier]
+                write_error(wd_id, author.olid, author.name, "openlibrary_wikidata_remote_id_collision", identifier, f'{{"ol": "{output[identifier]}", "wd": "{incoming_ids[identifier]}"}}')
         elif identifier in incoming_ids and identifier not in output:
             output[identifier] = incoming_ids[identifier]
             update_count = update_count + 1
@@ -146,7 +144,7 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
                 if len(ol_ids) > 1:
                     for ol_id in ol_ids:
                         author = ol.Author.get(ol_id)
-                        write_error(wd_id, ol_id, author.name, f"multiple_openlibrary_authors_for_one_wikidata_row", "ol_id", f'[{",".join([f'"{val}"' for val in ol_ids])}]')
+                        write_error(wd_id, ol_id, author.name, "multiple_openlibrary_authors_for_one_wikidata_row", "ol_id", f'[{",".join([f'"{val}"' for val in ol_ids])}]')
                     continue
                 ol_id = ol_ids[0]
 
@@ -180,7 +178,7 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
                     
                     # Bad case: there are multiple values for the remote ID
                     elif len(wd_remote_id_values) > 1:
-                        write_error(wd_id, ol_id, author.name, f"multiple_wikidata_remote_ids_for_one_author", remote_ids_key, ",".join([f'"{val}"' for val in valid_wd_remote_id_values]))
+                        write_error(wd_id, ol_id, author.name, "multiple_wikidata_remote_ids_for_one_author", remote_ids_key, ",".join([f'"{val}"' for val in valid_wd_remote_id_values]))
 
                 if len(remote_ids.keys()) > 0:
                     remote_ids, update_count = merge_remote_ids(author, remote_ids, wd_id)
@@ -193,7 +191,7 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
                         logger.info(f'new remote_ids for {ol_id}: {remote_ids}')
 
             except json.JSONDecodeError as e:
-                logger.error(f"Error parsing wikidata JSON on row {row} - {e}")
+                logger.error("Error parsing wikidata JSON on row {row} - {e}")
     
             
 if __name__ == "__main__":
