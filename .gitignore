@@ -1,5 +1,8 @@
 # Editors
 .idea
+.vscode/
+
+venv/
 
 logs
 
