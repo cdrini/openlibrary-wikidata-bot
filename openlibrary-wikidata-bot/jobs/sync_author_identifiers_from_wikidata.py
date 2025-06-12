@@ -126,7 +126,7 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
         next(file)  # skip the header line
         reader = csv.reader(file, delimiter="\t")  # Read as TSV
         for row in reader:
-            assert len(row) == 2
+            assert len(row) == 3
             wikidata_col_raw = row[1]
 
             parsed_wikidata_json = ""
