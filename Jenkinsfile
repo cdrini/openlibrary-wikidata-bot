@@ -4,6 +4,8 @@ pipeline {
       string(name: 'APT_MIRROR', defaultValue: '', description: 'An apt mirror url, if needed')
       string(name: 'HTTPS_PROXY', defaultValue: '', description: 'An HTTPS proxy URL, if needed')
       string(name: 'NO_PROXY', defaultValue: '', description: 'A comma-separated list of hosts to not proxy')
+      booleanParam(name: 'RUN_SYNC_EDITION_OLIDS_BY_ISBNS', defaultValue: true, description: 'Run sync_edition_olids_by_isbns job')
+      booleanParam(name: 'RUN_SYNC_AUTHOR_IDENTIFIERS_FROM_WIKIDATA', defaultValue: true, description: 'Run sync_author_identifiers_from_wikidata job')
   }
   agent {
     dockerfile {
@@ -34,15 +36,22 @@ pipeline {
         }
       }
     }
-    /* stage('Run Job') {
+    stage('Run Job') {
+      when {
+        expression { params.RUN_SYNC_EDITION_OLIDS_BY_ISBNS }
+      }
       steps {
         sh 'python3 openlibrary-wikidata-bot/jobs/sync_edition_olids_by_isbns.py'
       }
-    } */
+    }
     stage('sync_author_identifiers_from_wikidata') {
+      when {
+        expression { params.RUN_SYNC_AUTHOR_IDENTIFIERS_FROM_WIKIDATA }
+      }
       steps {
+        // TMP: Limiting to 20 records
         sh '''
-          curl -sL "https://openlibrary.org/data/ol_dump_wikidata_latest.txt.gz" | zcat > ol_dump_wikidata.tsv
+          curl -sL "https://openlibrary.org/data/ol_dump_wikidata_latest.txt.gz" | zcat | head -n20 > ol_dump_wikidata.tsv
         '''
         sh 'python3 openlibrary-wikidata-bot/jobs/sync_author_identifiers_from_wikidata.py --sql-path="ol_dump_wikidata.tsv"'
       }
