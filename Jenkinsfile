@@ -37,7 +37,15 @@ pipeline {
     stage('Run Job') {
       steps {
         sh 'python3 openlibrary-wikidata-bot/jobs/sync_edition_olids_by_isbns.py'
-        sh 'python3 openlibrary-wikidata-bot/jobs/sync_author_identifiers_from_wikidata.py --sql-path="tbd"'
+      }
+    }
+    stage('sync_author_identifiers_from_wikidata') {
+      steps {
+        // TODO: Update link after https://github.com/internetarchive/openlibrary/pull/10902 deployed
+        sh '''
+          curl -sL "https://archive.org/download/ol_dump_2025-05-31/ol_dump_wikidata_2025-05-31.txt.gz" | zcat > ol_dump_wikidata.tsv
+        '''
+        sh 'python3 openlibrary-wikidata-bot/jobs/sync_author_identifiers_from_wikidata.py --sql-path="ol_dump_wikidata.tsv"'
       }
     }
   }
