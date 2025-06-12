@@ -59,7 +59,7 @@ pipeline {
   post {
     always {
       archiveArtifacts artifacts: 'logs/jobs/sync_edition_olids_by_isbns/*', allowEmptyArchive: true
-      archiveArtifacts artifacts: 'logs/jobs/sync_author_identifiers_from_wikidata.py/*', allowEmptyArchive: true
+      archiveArtifacts artifacts: 'logs/jobs/sync_author_identifiers_from_wikidata/*', allowEmptyArchive: true
       deleteDir() // Delete the workspace
     }
   }
