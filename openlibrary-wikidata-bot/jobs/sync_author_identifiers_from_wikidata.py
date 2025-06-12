@@ -166,7 +166,7 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
                         author.name,
                         "multiple_openlibrary_authors_for_one_wikidata_row",
                         "ol_id",
-                        f'[{",".join([f'"{val}"' for val in ol_ids])}]',
+                        json.dumps(ol_ids),
                     )
                 continue
             ol_id = ol_ids[0]
@@ -205,7 +205,7 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
                         author.name,
                         "multiple_wikidata_remote_ids_for_one_author",
                         ol_identifier_name,
-                        f'[{",".join([f'"{val}"' for val in valid_wd_remote_id_values])}]',
+                        json.dumps(valid_wd_remote_id_values),
                     )
 
             if len(remote_ids.keys()) > 0:
