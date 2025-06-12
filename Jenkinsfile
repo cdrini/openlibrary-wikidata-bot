@@ -1,9 +1,25 @@
 pipeline {
+  parameters {
+      string(name: 'PIP_INDEX_URL', defaultValue: '')
+      string(name: 'APT_MIRROR', defaultValue: '', description: 'An apt mirror url, if needed')
+      string(name: 'HTTPS_PROXY', defaultValue: '', description: 'An HTTPS proxy URL, if needed')
+      string(name: 'NO_PROXY', defaultValue: '', description: 'A comma-separated list of hosts to not proxy')
+  }
   agent {
-    dockerfile { filename 'Dockerfile' }
+    dockerfile {
+      filename 'Dockerfile'
+      additionalBuildArgs """\
+        --build-arg PIP_INDEX_URL='${params.PIP_INDEX_URL}' \
+        --build-arg APT_MIRROR='${params.APT_MIRROR}' \
+        --build-arg HTTPS_PROXY='${params.HTTPS_PROXY}' \
+        --build-arg NO_PROXY='${params.NO_PROXY}' \
+      """
+    }
   }
   environment {
     PYWIKIBOT_DIR='/pywikibot'
+    HTTPS_PROXY = "${params.HTTPS_PROXY}"
+    NO_PROXY = "${params.NO_PROXY}"
   }
   stages {
     stage('Setup') {
