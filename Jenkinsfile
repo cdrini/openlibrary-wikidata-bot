@@ -49,9 +49,8 @@ pipeline {
         expression { params.RUN_SYNC_AUTHOR_IDENTIFIERS_FROM_WIKIDATA }
       }
       steps {
-        // TMP: Limiting to 20 records
         sh '''
-          curl -sL "https://openlibrary.org/data/ol_dump_wikidata_latest.txt.gz" | zcat | head -n20 > ol_dump_wikidata.tsv
+          curl -sL "https://openlibrary.org/data/ol_dump_wikidata_latest.txt.gz" | zcat > ol_dump_wikidata.tsv
         '''
         sh 'python3 openlibrary-wikidata-bot/jobs/sync_author_identifiers_from_wikidata.py --sql-path="ol_dump_wikidata.tsv"'
       }
