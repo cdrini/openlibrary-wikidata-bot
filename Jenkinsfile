@@ -34,11 +34,11 @@ pipeline {
         }
       }
     }
-    stage('Run Job') {
+    /* stage('Run Job') {
       steps {
         sh 'python3 openlibrary-wikidata-bot/jobs/sync_edition_olids_by_isbns.py'
       }
-    }
+    } */
     stage('sync_author_identifiers_from_wikidata') {
       steps {
         // TODO: Update link after https://github.com/internetarchive/openlibrary/pull/10902 deployed

@@ -91,7 +91,6 @@ def merge_remote_ids(author, incoming_ids, wd_id) -> tuple[dict[str, str], int]:
     """
     output = deepcopy(getattr(author, "remote_ids", {}))
     # Count
-    update_count = 0
     conflicts = 0
     for identifier in WD_PID_TO_OL_IDENTIFIER_NAME.values():
         if (
@@ -110,10 +109,9 @@ def merge_remote_ids(author, incoming_ids, wd_id) -> tuple[dict[str, str], int]:
             )
         elif identifier in incoming_ids and identifier not in output:
             output[identifier] = incoming_ids[identifier]
-            update_count = update_count + 1
     if conflicts > 0:
         return author.remote_ids, -1
-    return output, update_count
+    return output
 
 
 def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
@@ -208,7 +206,7 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
                         json.dumps(valid_wd_remote_id_values),
                     )
 
-            remote_ids, update_count = merge_remote_ids(author, remote_ids, wd_id)
+            remote_ids = merge_remote_ids(author, remote_ids, wd_id)
             if not dry_run:
                 pass
                 # I am not trying this yet! I'm terrified! I made dry-run default to false for this reason 😬
