@@ -208,14 +208,13 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
                         json.dumps(valid_wd_remote_id_values),
                     )
 
-            if len(remote_ids.keys()) > 0:
-                remote_ids, update_count = merge_remote_ids(author, remote_ids, wd_id)
-                if not dry_run:
-                    pass
-                    # I am not trying this yet! I'm terrified! I made dry-run default to false for this reason 😬
-                    # author.remote_ids = remote_ids
-                    # author.save("[sync_author_identifiers_with_wikidata] add wikidata remote identifiers")
-                logger.info(f"new remote_ids for {ol_id}: {remote_ids}")
+            remote_ids, update_count = merge_remote_ids(author, remote_ids, wd_id)
+            if not dry_run:
+                pass
+                # I am not trying this yet! I'm terrified! I made dry-run default to false for this reason 😬
+                # author.remote_ids = remote_ids
+                # author.save("[sync_author_identifiers_with_wikidata] add wikidata remote identifiers")
+            logger.info(f"new remote_ids for {ol_id}: {remote_ids}")
 
 
 if __name__ == "__main__":
