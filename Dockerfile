@@ -21,7 +21,8 @@ RUN if [ -n "$APT_MIRROR" ]; then \
         apt update; \
     fi && apt install -y \
         git \
-        expect
+        expect \
+        curl
 
 WORKDIR /app
 

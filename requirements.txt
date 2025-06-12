@@ -4,3 +4,4 @@ git+https://github.com/internetarchive/openlibrary-client.git@7e45d512d031970d2b
 mwparserfromhell>=0.5.2
 requests==2.31.0
 packaging
+wikitextparser>=0.47.5
