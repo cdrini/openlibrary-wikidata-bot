@@ -117,6 +117,22 @@ def merge_remote_ids(author, incoming_ids, wd_id) -> tuple[dict[str, str], int]:
 
 def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
     ol = OpenLibrary()
+    
+    # Follow author redirects until it either hits an object of /type/author or is determined to be an infinite loop redirect.
+    def resolve_redirects(author, seen=None):
+        if seen is None:
+            seen = set()
+        key = author.olid
+        if not key or key in seen:
+            return []
+        seen.add(key)
+        if author.type.get("key") != "/type/redirect":
+            return [author]
+        location = author.location
+        if location and location.startswith("/authors/"):
+            redirected_author = ol.Author.get(location.split("/authors/")[-1])
+            return resolve_redirects(redirected_author, seen)
+        return []
 
     csv.field_size_limit(sys.maxsize)
 
@@ -156,21 +172,34 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
                 continue
             wd_id = parsed_wikidata_json["id"]
 
-            if len(ol_ids) > 1:
-                for ol_id in ol_ids:
-                    author = ol.Author.get(ol_id)
+            base_authors = [ol.Author.get(ol_id) for ol_id in ol_ids]
+
+            redirected_authors = []
+            for a in base_authors:
+                redirected_authors.extend(resolve_redirects(a))
+            nonredirected_authors = [a for a in base_authors if a.type.get("key") == "/type/author"]
+
+            concat_authors = redirected_authors + nonredirected_authors
+            authors = list({a.olid: a for a in concat_authors}.values()) # unique
+
+            # all results are redirects or no authors found: don't change anything
+            if len(authors) == 0:
+                continue
+
+            if len(authors) > 1:
+                for author in authors:
                     write_error(
                         wd_id,
-                        ol_id,
+                        author.olid,
                         author.name,
                         "multiple_openlibrary_authors_for_one_wikidata_row",
                         "ol_id",
-                        json.dumps(ol_ids),
+                        json.dumps([author.olid for author in authors]),
                     )
                 continue
-            ol_id = ol_ids[0]
 
-            author = ol.Author.get(ol_id)
+            # proceed with the first author in the array by default. we've logged extras to investigate later
+            author = authors[0]
 
             remote_ids = {"wikidata": wd_id}
 
@@ -200,7 +229,7 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
                 else:
                     write_error(
                         wd_id,
-                        ol_id,
+                        author.olid,
                         author.name,
                         "multiple_wikidata_remote_ids_for_one_author",
                         ol_identifier_name,
@@ -213,7 +242,7 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
                 author.save(
                     "[sync_author_identifiers_with_wikidata] add wikidata remote identifiers"
                 )
-            logger.info(f"new remote_ids for {ol_id}: {remote_ids}")
+            logger.info(f"new remote_ids for {author.olid}: {remote_ids}")
 
 
 if __name__ == "__main__":
