@@ -126,13 +126,17 @@ def consolidate_remote_author_ids(sql_path: str, dry_run: bool = True) -> None:
         if not key or key in seen:
             return []
         seen.add(key)
-        if author.type.get("key") != "/type/redirect":
-            return [author]
-        location = author.location
-        if location and location.startswith("/authors/"):
+        location = getattr(author, "location", None)
+        if location and isinstance(location, str) and location.startswith("/authors/"):
             redirected_author = ol.Author.get(location.split("/authors/")[-1])
-            return resolve_redirects(redirected_author, seen)
-        return []
+            if redirected_author:
+                return resolve_redirects(redirected_author, seen)
+            return []
+        author_type = getattr(author, "type", {})
+        if author_type and isinstance(author_type, dict) and author_type.get("key") == "/type/redirect":
+            return []
+            
+        return [author]
 
     csv.field_size_limit(sys.maxsize)
 
